@@ -2,7 +2,7 @@
 #Before running this file, run the command:   module load gnu
 
 
-EXECS=danc_analyzer
+EXECS=danc_parser
 
 #Replace the g++ with gcc if using C
 CC=g++
