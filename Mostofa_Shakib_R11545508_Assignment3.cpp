@@ -1,3 +1,5 @@
+// import the necessary header files
+
 #include <iostream>
 #include <fstream>
 #include <string.h>
@@ -5,16 +7,18 @@
 
 using namespace std;
 
-
 // Global Variables
 
 char currentChar;
 FILE *myfile;
+string previousToken;
+string previousLexeme;
 string nextToken;
 string nextLexeme;
 
 // Local function signatures
 
+void adjustTokens(string prevToken, string prevLexeme, string nexToken, string nexLexeme);
 void getChar();
 void getNonBlank();
 void lex();
@@ -39,35 +43,38 @@ int main(int argc, char ** argv)
 
   if (argc == 2) {
 
-    myfile = fopen (argv[1] , "r");
-        
+    myfile = fopen (argv[1] , "r");  // opens a file and assigns it to the file myfile
+    
+    // checks if the file can be opened
+
     if ( myfile != NULL ) {
-      cout << "DanC Parser :: R11545508" << endl;
+        cout << "DanC Parser :: R11545508" << endl;
 
-      getChar();
+        getChar();      // gets the initial character from the datastream
 
-      while (  !feof(myfile) ) {
-        lex();
-        parseStatement();
+        while (  !feof(myfile) ) {
+            lex();
+            parseStatement();
+        }
+
+        fclose (myfile);    // After we have read all the lines from the text file we simply close the file reader
+        cout << "Syntax Validated" << endl;
+        exit(0);
     }
-
-    fclose (myfile);    // After we have read all the lines from the text file we simply close the file reader
-    }
-
+    // returns appropriate error if the file cannot be opened
     else {
       cout << "Unable to open file" << endl;
       exit(3);
     }
   }
+  // returns appropriate error if two arguments isn't passed
   else {
     cout << "Not enough arguments passed" << endl;
     exit(2);
   }
 }
 
-
-// Utility function
-
+// Utility functions
 
 // A helper function that checks to is if the current character is anyone of the special characters if not the function returns false
 
@@ -129,7 +136,6 @@ int getReservedKeywordIndex(string word)
   return 100;
 }
 
-
 // A helper function that checks if all the characters of a string is lower cased if not the function returns false
 
 bool isAllLower(string word)
@@ -146,11 +152,19 @@ bool isAllLower(string word)
   return true;
 }
 
+// A helper function that maps a lexeme with a token
+
 void lex() {
+
     getNonBlank();
 
+    // checks if the current character is a digit or not
+
     if ( isdigit(currentChar) ) {
+
         int digitNumber = 0;
+
+        // for integers greater than 9
 
         while (isdigit(currentChar)) {
             int num = (int) currentChar - 48;
@@ -158,12 +172,15 @@ void lex() {
             getChar();
         }
 
-        nextToken = "INT_LIT";
-        nextLexeme = std::to_string(digitNumber);
+        adjustTokens(nextToken, nextLexeme, "INT_LIT", std::to_string(digitNumber));
     }
+
+    // checks if the current character is an alphabet or not
 
     else if ( isalpha(currentChar) ) {
         string currentString = "";
+
+        // for strings longer than 1 character
 
         while ( isalpha(currentChar) ) {
           currentString += currentChar;
@@ -171,39 +188,37 @@ void lex() {
         }
 
         if ( isAllLower(currentString) == false) {
-            nextToken = "UNKNOWN";
+            adjustTokens(nextToken, nextLexeme, "UNKNOWN", currentString);
             errorMessage();
         }
+
+        // gets the index of the reserved keyword using the helper function getReservedKeywordIndex
 
         int reservedKeywordIndex = getReservedKeywordIndex(currentString);
 
         switch (reservedKeywordIndex) {
             case 0:
-                nextToken = "KEY_READ";
-                nextLexeme = currentString;
+                adjustTokens(nextToken, nextLexeme, "KEY_READ", currentString);
                 break;
             case 1:
-                nextToken = "KEY_WRITE";
-                nextLexeme = currentString;
+                adjustTokens(nextToken, nextLexeme, "KEY_WRITE", currentString);
                 break;
             case 2:
-                nextToken = "KEY_WHILE";
-                nextLexeme = currentString;
+                adjustTokens(nextToken, nextLexeme, "KEY_WHILE", currentString);
                 break;
             case 3:
-                nextToken = "KEY_DO";
-                nextLexeme = currentString;
+                adjustTokens(nextToken, nextLexeme, "KEY_DO", currentString);
                 break;
             case 4:
-                nextToken = "KEY_OD";
-                nextLexeme = currentString;
+                adjustTokens(nextToken, nextLexeme, "KEY_OD", currentString);
                 break;
             default:
-                nextToken = "IDENT";
-                nextLexeme = currentString;
+                adjustTokens(nextToken, nextLexeme, "IDENT", currentString);
                 break;
         }
     }
+
+    // checks if current character is a special character or not
 
     else if ( isSpecial(currentChar) == true )  {
         char singleString = currentChar;
@@ -212,26 +227,24 @@ void lex() {
         getChar();
         specialString += currentChar;
 
+        // checks if the special character is of length two or not
+
         if ( isTwoCharSpecial(specialString) == true ) {
             int specialStringIndex = getSpecialCharIndex(specialString);
             getChar();
 
             switch (specialStringIndex) {
                 case 0:
-                    nextToken = "ASSIGN_OP";
-                    nextLexeme = specialString;
+                    adjustTokens(nextToken, nextLexeme, "ASSIGN_OP", specialString);
                     break;
                 case 1:
-                    nextToken =  "NEQUAL_OP";
-                    nextLexeme = specialString;
+                    adjustTokens(nextToken, nextLexeme, "NEQUAL_OP", specialString);
                     break;
                 case 2:
-                    nextToken = "GEQUAL_OP";
-                    nextLexeme = specialString;
+                    adjustTokens(nextToken, nextLexeme, "GEQUAL_OP", specialString);
                     break;
                 case 3:
-                    nextToken = "LEQUAL_OP";
-                    nextLexeme = specialString;
+                    adjustTokens(nextToken, nextLexeme, "LEQUAL_OP", specialString);
                     break;
             }
         }
@@ -239,46 +252,68 @@ void lex() {
         else {
             switch (singleString) {
                 case '<':
+                    previousToken = nextToken;
+                    previousLexeme = nextLexeme;
                     nextToken = "LESSER_OP";
                     nextLexeme = singleString;
                     break;
                 case '>':
+                    previousToken = nextToken;
+                    previousLexeme = nextLexeme;
                     nextToken = "GREATER_OP";
                     nextLexeme = singleString;
                     break;
                 case '=':
+                    previousToken = nextToken;
+                    previousLexeme = nextLexeme;
                     nextToken = "EQUAL_OP";
                     nextLexeme = singleString;
                     break;
                 case '+':
+                    previousToken = nextToken;
+                    previousLexeme = nextLexeme;
                     nextToken = "ADD_OP";
                     nextLexeme = singleString;
                     break;
                 case '-':
+                    previousToken = nextToken;
+                    previousLexeme = nextLexeme;
                     nextToken = "LESSER_OP";
                     nextLexeme = singleString;
                     break;
                 case '*':
+                    previousToken = nextToken;
+                    previousLexeme = nextLexeme;
                     nextToken = "MULT_OP";
                     nextLexeme = singleString;
                     break;
                 case '/':
+                    previousToken = nextToken;
+                    previousLexeme = nextLexeme;
                     nextToken = "DIV_OP";
                     nextLexeme = singleString;
                     break;
                 case '(':
+                    previousToken = nextToken;
+                    previousLexeme = nextLexeme;
                     nextToken = "LEFT_PAREN";
                     nextLexeme = singleString;
                     break;
                 case ')':
+                    previousToken = nextToken;
+                    previousLexeme = nextLexeme;
                     nextToken = "RIGHT_PAREN";
                     nextLexeme = singleString;
                     break;
                 case ';':
+                    previousToken = nextToken;
+                    previousLexeme = nextLexeme;
                     nextToken = "SEMICOLON";
                     nextLexeme = singleString;
                     break;
                 default:
+                    previousToken = nextToken;
+                    previousLexeme = nextLexeme;
                     nextToken = "UNKNOWN";
                     errorMessage();
             }
@@ -286,8 +321,11 @@ void lex() {
     }
 
     else if ( feof(myfile) ) {
-        cout << "Syntax Validated" << endl;
-        exit(0);
+        // If we have reached the end of file and the last character is not in our grammar then error out
+        if ( nextToken != "RIGHT_PAREN" && nextToken != "INT_LIT"  && nextToken != "IDENT" ) {
+            cout << "EOF" <<endl;
+            exit(1);
+        }
     }
 
     else {
@@ -295,11 +333,15 @@ void lex() {
     }
 }
 
+// A helper function that gets the next non-space character from the input stream
+
 void getNonBlank() {
     while ( isspace(currentChar) ) {
         getChar();
     }
 }
+
+// A helper function that gets the next character from the input stream
 
 void getChar() {
     if ( currentChar != EOF ) {
@@ -307,78 +349,29 @@ void getChar() {
     }
 }
 
+// A helper function for the production rule S
 
 void parseStatement(){
+
     if ( nextToken == "IDENT" ) {
-        parseVariable();
-
-        if ( nextToken != "ASSIGN_OP" ) {
-            errorMessage();
-        }
-
         lex();
-        parseExpression();
 
-
-        if ( nextToken == "SEMICOLON"){
+        if ( nextToken == "ASSIGN_OP" ) {
             lex();
-            parseStatement();
+            parseExpression();
+        }
+        else {
+            errorMessage();
         }
     }
-
-    else if ( nextToken == "KEY_WRITE" ) {
-        lex();
-
-        if ( nextToken != "LEFT_PAREN" ) {
-            errorMessage();
-        }
-
-        lex();
-        parseVariable();
-
-        if ( nextToken != "RIGHT_PAREN" ) {
-            errorMessage();
-        }
-
-        lex();
-
-        if ( nextToken == "SEMICOLON"){
-            lex();
-            parseStatement();
-        }
-    }
-
     else if ( nextToken == "KEY_READ" ) {
         lex();
 
-        if ( nextToken != "LEFT_PAREN" ) {
-            errorMessage();
-        }
-
-        lex();
-        parseVariable();
-
-        if ( nextToken != "RIGHT_PAREN" ) {
-            errorMessage();
-        }
-
-        lex();
-
-        if ( nextToken == "SEMICOLON"){
+        if ( nextToken == "LEFT_PAREN" ) {
             lex();
-            parseStatement();
-        }
-    }
+            parseVariable();
 
-    else if ( nextToken == "KEY_WHILE") {
-        lex();
-        parseConstant();
-
-        if ( nextToken == "KEY_DO") {
-            lex();
-            parseStatement();
-
-            if ( nextToken == "KEY_OD" ){
+            if ( nextToken == "RIGHT_PAREN" ) {
                 lex();
             }
             else {
@@ -389,44 +382,89 @@ void parseStatement(){
             errorMessage();
         }
     }
-    else {
-        errorMessage();
-    }
-}
+    else if ( nextToken == "KEY_WRITE" ) {
+        lex();
 
-
-void parseConstant(){
-    if ( nextToken == "LEFT_PAREN" || nextToken == "IDENT" || nextToken == "INT_LIT" ){
-        parseExpression();
-
-        if (nextToken == "LESSER_OP" || nextToken == "GREATER_OP" || nextToken == "EQUAL_OP" || nextToken == "NEQUAL_OP" || nextToken == "LEQUAL_OP" || nextToken == "GEQUAL_OP" ){
+        if ( nextToken == "LEFT_PAREN" ) {
             lex();
-            parseExpression();
-        }
+            parseVariable();
 
+            if ( nextToken == "RIGHT_PAREN" ) {
+                lex();
+            }
+            else {
+                errorMessage();
+            }
+        }
         else {
             errorMessage();
         }
     }
+    else if ( nextToken == "KEY_WHILE" ) {
+        lex();
+        parseConstant();
+
+        if ( nextToken == "KEY_DO" ) {
+            lex();
+            parseStatement();
+
+            if ( nextToken == "KEY_OD" ) {
+                lex();
+            }
+            else {
+                errorMessage();
+            }
+        }
+        else {
+            errorMessage();
+        }
+
+    }
+    else {
+        errorMessage();
+    }
+
+    while(true) {
+        if (nextToken == "SEMICOLON" ) {
+            lex();
+            parseStatement();
+        }
+        else {
+            return;  // for epsilon
+        }
+    }
+}
+
+// A helper function for the production rule C
+
+void parseConstant(){
+    parseExpression();
+
+    if (nextToken == "LESSER_OP" || nextToken == "GREATER_OP" || nextToken == "EQUAL_OP" || nextToken == "NEQUAL_OP" || nextToken == "LEQUAL_OP" || nextToken == "GEQUAL_OP" ){
+        lex();
+    }
+    else {
+        errorMessage();
+    }
+
+    parseExpression();
 }
 
 void parseExpression(){
     parseTerm();
 
     while (true) {
-        if ( nextToken == "ADD_OP" ) {
-            lex();
-            parseTerm();
-        }
-        else if (nextToken == "SUB_OP") {
+        if ( nextToken == "ADD_OP" || nextToken == "SUB_OP") {
             lex();
             parseTerm();
         }
         else {
-            return;
+            return; // for epsilon
         }
     }
 }
+
+// A helper function for the production rule F
 
 void parseFactor() {
     if ( nextToken == "INT_LIT" ) {
@@ -440,12 +478,20 @@ void parseFactor() {
     else if ( nextToken == "LEFT_PAREN" ) {
         lex();
         parseExpression();
-        lex();
+
+        if ( nextToken == "RIGHT_PAREN" ) {
+            lex();
+        }
+        else {
+            errorMessage();
+        }
     }
     else {
         errorMessage();
     }
 }
+
+// A helper function for the production rule T
 
 void parseTerm() {
     parseFactor();
@@ -460,26 +506,41 @@ void parseTerm() {
             parseFactor();
         }
         else {
-            return;
+            return; // for epsilon
         }
     }
 }
 
+// A helper function for the production rule V
+
 void parseVariable(){
-    if ( nextToken == "IDENT"  ) {
+    if ( nextToken == "IDENT" && currentChar != EOF && previousToken != nextToken ) {
         lex();
         parseVariable();
     }
 }
 
+// A helper function for the production rule N
+
 void parseNumber(){
-    if ( nextToken == "INT_LIT" ) {
+    if ( nextToken == "INT_LIT" && currentChar != EOF && previousToken != nextToken ) {
         lex();
         parseNumber();
     }
 }
 
+// A helper function to print the error message
+
 void errorMessage(){
-    cout << "Error encounter: The next lexeme was " << nextLexeme <<  " the next token was  " << nextToken << endl;
+    cout << "Error encounter: The next lexeme was " << previousLexeme <<  " the next token was  " << previousToken << endl;
     exit(1);
+}
+
+// A helper function to update the previous as well as next token and lexeme values
+
+void adjustTokens(string prevToken, string prevLexeme, string nexToken, string nexLexeme){
+    previousToken = prevToken;
+    previousLexeme = prevLexeme;
+    nextToken = nexToken;
+    nextLexeme = nextLexeme;
 }
