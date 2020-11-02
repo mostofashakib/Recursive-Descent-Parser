@@ -1,4 +1,14 @@
-// import the necessary header files
+
+/*
+  Author: Mostofa Adib Shakib
+  R#: 11545508
+  Assignment: Homework #4
+  Date: 11/02/2020
+
+  Description: This program takes in an executable file and an input file and validates the syntax of a source code file as defined by the BNF rule
+*/
+
+// Import the necessary header files
 
 #include <iostream>
 #include <fstream>
@@ -27,7 +37,6 @@ bool isAllLower();
 bool isTwoCharSpecial();
 int getSpecialCharIndex();
 int getReservedKeywordIndex();
-
 void parseStatement();
 void parseConstant();
 void parseVariable();
@@ -155,8 +164,8 @@ bool isAllLower(string word)
 // A helper function that maps a lexeme with a token
 
 void lex() {
-
-    getNonBlank();
+	
+    getNonBlank(); // gets the next non-space character
 
     // checks if the current character is a digit or not
 
@@ -186,6 +195,8 @@ void lex() {
           currentString += currentChar;
           getChar();
         }
+
+        // checks if all the characters in a string are lower cased or not
 
         if ( isAllLower(currentString) == false) {
             adjustTokens(nextToken, nextLexeme, "UNKNOWN", currentString);
@@ -230,7 +241,7 @@ void lex() {
         // checks if the special character is of length two or not
 
         if ( isTwoCharSpecial(specialString) == true ) {
-            int specialStringIndex = getSpecialCharIndex(specialString);
+            int specialStringIndex = getSpecialCharIndex(specialString);   // gets the index of the special character of length two
             getChar();
 
             switch (specialStringIndex) {
@@ -248,6 +259,8 @@ void lex() {
                     break;
             }
         }
+
+        // maps a special character of length one to it's appropriate token and lexeme
 
         else {
             switch (singleString) {
@@ -278,7 +291,7 @@ void lex() {
                 case '-':
                     previousToken = nextToken;
                     previousLexeme = nextLexeme;
-                    nextToken = "LESSER_OP";
+                    nextToken = "SUB_OP";
                     nextLexeme = singleString;
                     break;
                 case '*':
@@ -322,7 +335,7 @@ void lex() {
 
     else if ( feof(myfile) ) {
         // If we have reached the end of file and the last character is not in our grammar then error out
-        if ( nextToken != "RIGHT_PAREN" && nextToken != "INT_LIT"  && nextToken != "IDENT" ) {
+        if ( nextToken != "RIGHT_PAREN" && nextToken != "INT_LIT"  && nextToken != "IDENT" &&  nextToken != "KEY_OD") {
             cout << "EOF" <<endl;
             exit(1);
         }
@@ -424,6 +437,8 @@ void parseStatement(){
         errorMessage();
     }
 
+    // for parseStatementPrime
+
     while(true) {
         if (nextToken == "SEMICOLON" ) {
             lex();
@@ -449,6 +464,8 @@ void parseConstant(){
 
     parseExpression();
 }
+
+// A helper function for the production rule E
 
 void parseExpression(){
     parseTerm();
@@ -529,7 +546,7 @@ void parseNumber(){
     }
 }
 
-// A helper function to print the error message
+// A helper function to print the error message with the appropriate lexeme and token
 
 void errorMessage(){
     cout << "Error encounter: The next lexeme was " << previousLexeme <<  " the next token was  " << previousToken << endl;
