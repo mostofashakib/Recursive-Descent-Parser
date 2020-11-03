@@ -1,6 +1,6 @@
-# Recursive-Decent-Parser
+# Recursive-Descent-Parser
 
-A recursive decent parser that accept a source code file as a required command line argument and display an appropriate error message if the argument is not provided or the file does not exist. If a user input file contains multiple syntax errors, the program will find and report the first syntax error
+A recursive descent parser that accepts a source code file as a required command-line argument and displays an appropriate error message if the argument is not provided or the file does not exist. If a user input file contains multiple syntax errors, the program will find and report the first syntax error
 
 Author: Mostofa Adib Shakib
 
