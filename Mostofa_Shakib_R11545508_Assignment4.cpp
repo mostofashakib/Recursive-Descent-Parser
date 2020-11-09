@@ -17,15 +17,17 @@
 #include <string.h>
 #include <stdio.h>
 
-template <typename T>
-std::string ToString(T val)
-{
-    std::stringstream stream;
-    stream << val;
-    return stream.str();
-}
-
 using namespace std;
+
+namespace patch
+{
+    template < typename T > std::string to_string( const T& n )
+    {
+        std::ostringstream stm ;
+        stm << n ;
+        return stm.str() ;
+    }
+}
 
 // Global Variables
 
@@ -191,7 +193,7 @@ void lex() {
             getChar();
         }
 
-        adjustTokens(nextToken, nextLexeme, "INT_LIT", std::to_string(digitNumber));
+        adjustTokens(nextToken, nextLexeme, "INT_LIT", patch::to_string(digitNumber));
     }
 
     // checks if the current character is an alphabet or not
