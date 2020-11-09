@@ -1,10 +1,8 @@
 
 /*
   Author: Mostofa Adib Shakib
-  R#: 11545508
-  Assignment: Homework #4
   Date: 11/02/2020
-
+  Language: C++
   Description: This program takes in an executable file and an input file and validates the syntax of a source code file as defined by the BNF rule
 */
 
@@ -16,14 +14,6 @@
 #include <fstream>
 #include <string.h>
 #include <stdio.h>
-
-template <typename T>
-std::string ToString(T val)
-{
-    std::stringstream stream;
-    stream << val;
-    return stream.str();
-}
 
 using namespace std;
 
