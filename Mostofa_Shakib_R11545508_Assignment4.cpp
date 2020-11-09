@@ -11,6 +11,8 @@
 // Import the necessary header files
 
 #include <iostream>
+#include <stdlib.h>
+#include <sstream>
 #include <fstream>
 #include <string.h>
 #include <stdio.h>
